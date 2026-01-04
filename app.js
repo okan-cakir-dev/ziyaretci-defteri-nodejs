@@ -1,79 +1,86 @@
 const express = require('express');
-const fs = require('fs');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const Mesaj = require('./models/mesaj'); 
+
 const app = express();
 
 app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
-
 app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// BU FONKSİYONU ESKİSİNİN YERİNE YAPIŞTIR
-const verileriOku = () => {
-    try {
-        const dosya = fs.readFileSync('mesajlar.json', 'utf-8');
-        return JSON.parse(dosya);
-    } catch (hata) {
-        // Eğer dosya yoksa veya bozuksa burası çalışır
-        console.log("Dosya okunurken hata oluştu (Bu normal olabilir):", hata.message);
-        return []; // <-- EN ÖNEMLİ KISIM BURASI! MUTLAKA OLMALI.
-    }
-};
+const dbURL = "mongodb+srv://admin:12345@cluster0.fynxfgn.mongodb.net/?appName=Cluster0"; 
 
-const verileriKaydet = (veriListesi) => {
-    fs.writeFileSync('mesajlar.json', JSON.stringify(veriListesi, null, 2));
-};
+mongoose.connect(dbURL)
+  .then(() => console.log('✅ Veritabanına Bağlandık!'))
+  .catch((err) => console.log('❌ Bağlantı Hatası:', err));
 
-app.get('/', (istek, cevap) => {
-    // BURASI ÇOK ÖNEMLİ:
-    // Eğer verileriOku() undefined dönerse, manuel olarak [] (boş liste) veriyoruz.
-    const mesajlar = verileriOku() || []; 
-    
-    cevap.render('defter', { gelenMesajlar: mesajlar });
+app.get('/', (req, res) => {
+    Mesaj.find().sort({ tarih: -1 })
+        .then((gelenMesajlar) => {
+            res.render('defter', { mesajlar: gelenMesajlar });
+        })
+        .catch((err) => {
+            console.log(err);
+            res.send("Veri çekilirken hata oluştu.");
+        });
 });
 
-app.post('/ekle', (istek, cevap) => {
-    const mesajlar = verileriOku();
+app.post('/ekle', (req, res) => {
+    console.log("Formdan gelen veri:", req.body); 
 
-    mesajlar.push({
-        isim: istek.body.isim,
-        not: istek.body.not
+    const yeniMesaj = new Mesaj({
+        isim: req.body.isim,
+        not: req.body.not
     });
 
-    verileriKaydet(mesajlar);
-    cevap.redirect('/');
+    yeniMesaj.save()
+        .then(() => {
+            console.log("Mesaj başarıyla kaydedildi!");
+            res.redirect('/');
+        })
+        .catch((err) => {
+            console.log("Kaydederken hata:", err);
+            res.send("Kaydederken hata oluştu.");
+        });
 });
 
-app.get('/sil/:id', (istek, cevap) => {
-    const mesajlar = verileriOku();
-    const sira = istek.params.id;
+app.get('/sil/:id', (req, res) => {
+    const id = req.params.id;
 
-    mesajlar.splice(sira, 1);
-
-    verileriKaydet(mesajlar);
-    cevap.redirect('/');
+    Mesaj.findByIdAndDelete(id)
+        .then(() => {
+            console.log("Mesaj silindi.");
+            res.redirect('/'); 
+        })
+        .catch((err) => {
+            console.log(err);
+        });
 });
 
-app.get('/duzenle/:id', (istek, cevap) => {
-    const mesajlar = verileriOku();
-    const sira = istek.params.id;
-    const secilenMesaj = mesajlar[sira];
+app.get('/duzenle/:id', (req, res) => {
+    const id = req.params.id;
 
-    cevap.render('duzenle', { id: sira, veri: secilenMesaj });
+    Mesaj.findById(id)
+        .then((sonuc) => {
+            res.render('duzenle', { mesaj: sonuc });
+        })
+        .catch((err) => console.log(err));
 });
 
-app.post('/guncelle/:id', (istek, cevap) => {
-    const mesajlar = verileriOku();
-    const sira = istek.params.id;
+app.post('/guncelle/:id', (req, res) => {
+    const id = req.params.id;
 
-    mesajlar[sira] = {
-        isim: istek.body.isim,
-        not: istek.body.not
-    };
-
-    verileriKaydet(mesajlar);
-    cevap.redirect('/');
+    Mesaj.findByIdAndUpdate(id, {
+        isim: req.body.isim,
+        not: req.body.not
+    })
+    .then(() => {
+        res.redirect('/'); 
+    })
+    .catch((err) => console.log(err));
 });
 
 app.listen(3000, () => {
-    console.log('Kalıcı Hafızalı Sunucu Açık: http://localhost:3000');
+    console.log('🚀 Sunucu 3000 portunda çalışıyor...');
 });
