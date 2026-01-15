@@ -18,7 +18,7 @@ app.use(session({
     saveUninitialized: true
 }));
 
-const dbURL = "mongodb+srv://admin:220325@cluster0.fynxfgn.mongodb.net/?appName=Cluster0" // guncelleme
+const dbURL = process.env.MONGO_URL || "mongodb+srv://admin:220325@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority";
 mongoose.connect(dbURL)
   .then(() => console.log('✅ Veritabanına Bağlandık!'))
   .catch((err) => console.log('❌ Bağlantı Hatası:', err));
