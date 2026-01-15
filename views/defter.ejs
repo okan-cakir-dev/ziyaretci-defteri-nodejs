@@ -45,7 +45,9 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <h5 class="card-title text-primary"><%= mesaj.isim %></h5>
-                                    <small class="text-muted" style="font-size: 0.75rem;"><%= mesaj.tarih.toLocaleDateString() %></small>
+                                    <small class="text-muted" style="font-size: 0.75rem;"><small class="text-muted" style="font-size: 0.75rem;">
+                                        <%= moment(mesaj.tarih).fromNow() %>
+                                    </small></small>
                                 </div>
                                 
                                 <p class="card-text mt-2"><%= mesaj.not %></p>
