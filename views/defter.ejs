@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziyaretçi Defteri</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+    <div class="container mt-5">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-white mb-0" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">📖 Ziyaretçi Defteri</h1>
+            
+            <% if (admin) { %>
+                <a href="/cikis" class="btn btn-danger btn-sm shadow">Çıkış Yap 🔒</a>
+            <% } else { %>
+                <a href="/giris" class="btn btn-light btn-sm shadow text-primary fw-bold">Admin Girişi 🔑</a>
+            <% } %>
+        </div>
+
+        <div class="card p-4 shadow-lg mb-5" style="border-radius: 20px;">
+            <form action="/ekle" method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-secondary">Adınız:</label>
+                    <input type="text" name="isim" class="form-control" required placeholder="Adınızı yazın...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-secondary">Mesajınız:</label>
+                    <textarea name="not" class="form-control" rows="3" required placeholder="Bir not bırakın..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">✨ Mesajı Kaydet</button>
+            </form>
+        </div>
+
+        <h3 class="text-white mb-4">Son Mesajlar</h3>
+        
+        <% if(mesajlar.length > 0) { %>
+            <div class="row">
+                <% mesajlar.forEach(function(mesaj) { %>
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 shadow-sm hover-effect">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title text-primary"><%= mesaj.isim %></h5>
+                                    <small class="text-muted" style="font-size: 0.75rem;"><%= mesaj.tarih.toLocaleDateString() %></small>
+                                </div>
+                                
+                                <p class="card-text mt-2"><%= mesaj.not %></p>
+                                
+                                <% if (admin) { %>
+                                    <hr>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="/duzenle/<%= mesaj._id %>" class="btn btn-warning btn-sm">✏️ Düzenle</a>
+                                        <a href="/sil/<%= mesaj._id %>" class="btn btn-danger btn-sm">🗑️ Sil</a>
+                                    </div>
+                                <% } %>
+                                </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="alert alert-light shadow-sm text-center">
+                Henüz hiç mesaj yok. İlk yazan sen ol! 🚀
+            </div>
+        <% } %>
+
+    </div>
+</body>
+</html>
